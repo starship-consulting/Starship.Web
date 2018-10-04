@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using Starship.Core.Data;
 using Starship.Web.Http;
 using Starship.Web.Entities;
 using Starship.Web.Enumerations;
-using Starship.Azure.Interfaces;
 
 namespace Starship.Web.Services {
-    public class ParsingService : HttpClientService {
+    public class ParsingService : WebAutomationService {
         
         public ParsingService(WebParser parser) : base(parser.GetHttpHandler()) {
             Parser = parser;
@@ -23,7 +24,8 @@ namespace Starship.Web.Services {
                 Process(Parser.GetNextPage());
             }
             catch (Exception exception) {
-                DataProvider.Save(new LogMessage(Parser.GetPartition(), CurrentUrl, exception));
+                Trace.TraceError(exception.ToString());
+                //DataProvider.Save(new LogMessage(Parser.GetPartition(), CurrentUrl, exception));
 
                 if (Debugger.IsAttached) {
                     throw;
@@ -46,7 +48,9 @@ namespace Starship.Web.Services {
             }
 
             foreach (var link in document.Links) {
-                Process(link);
+                if(link.ShouldNavigateTo(this)) {
+                    Process(link);
+                }
             }
         }
 
@@ -66,85 +70,112 @@ namespace Starship.Web.Services {
 
             var partition = Parser.GetPartition();
 
-            var file = DataProvider.Get<WebResource>().ByRemoteIdentifier(partition, item.Id).FirstOrDefault();
+            var resource = DataProvider.Get<WebResource>().ByRemoteIdentifier(partition, item.Id).FirstOrDefault();
 
-            if (file == null) {
-                file = DataProvider.Save(new WebResource(partition, pageUrl, item));
+            if (resource == null) {
+                resource = DataProvider.Save(new WebResource(partition, pageUrl, item));
             }
-            else if (file.Status != FileStatusTypes.DownloadFailed) {
+            else if (resource.Status != FileStatusTypes.DownloadFailed) {
                 return;
             }
 
             try {
-                if (file.IsDownloadable() && item.Data == null) {
-                    item.Data = Download(file, item.FileUrl);
-                }
+                if (DownloadFiles && resource.IsDownloadable()) {
 
-                if (item.Data != null) {
-                    Upload(file, item.Data);
+                    if(item.Data == null) {
+                        item.Data = Download(resource, item.FileUrl);
+                    }
+
+                    if (item.Data != null) {
+                        Upload(resource, item.Data);
+                    }
                 }
             }
             catch (Exception exception) {
-                file.Status = FileStatusTypes.Error;
-                file.StatusText = exception.ToString();
-                DataProvider.Save(file);
+                Trace.TraceError(exception.ToString());
+                resource.Status = FileStatusTypes.Error;
+                resource.StatusText = exception.ToString();
+                DataProvider.Save(resource);
                 throw;
             }
         }
 
-        private byte[] Download(WebResource file, string fileUrl) {
-            Debug.WriteLine("Begin downloading file: " + fileUrl);
+        private byte[] Download(WebResource resource, string fileUrl) {
+            Trace.TraceInformation("Downloading resource: " + fileUrl);
 
-            file.Status = FileStatusTypes.Downloading;
-            DataProvider.Save(file);
-
+            resource.Status = FileStatusTypes.Downloading;
+            DataProvider.Save(resource);
+            
             try {
                 var response = HttpHead(fileUrl);
                 var downloader = Parser.GetDownloader();
-                var content = downloader.Download(response, file.Url, GetLocalStorageRoot());
+                var content = downloader.Download(response, resource.Url, GetLocalStoragePath(resource));
 
-                file.Size = content.Size;
+                resource.Size = content.Size;
 
                 var data = content.Read();
 
                 using (var md5 = MD5.Create()) {
-                    file.Hash = BitConverter.ToString(md5.ComputeHash(data)).Replace("-", "").ToLower();
+                    resource.Hash = BitConverter.ToString(md5.ComputeHash(data)).Replace("-", "").ToLower();
                 }
 
-                DataProvider.Save(file);
+                DataProvider.Save(resource);
 
-                Debug.WriteLine("Finish downloading file: " + fileUrl);
+                Trace.TraceInformation("Finished downloading file: " + fileUrl);
 
                 return data;
             }
             catch (Exception ex) {
-                Debug.WriteLine("Failed downloading file: " + fileUrl);
+                Trace.TraceError("Failed downloading file: " + fileUrl + "." + Environment.NewLine + ex);
 
-                file.Status = FileStatusTypes.DownloadFailed;
-                file.StatusText = ex.ToString();
+                resource.Status = FileStatusTypes.DownloadFailed;
+                resource.StatusText = ex.ToString();
 
-                DataProvider.Save(file);
+                DataProvider.Save(resource);
             }
 
             return null;
         }
 
-        private void Upload(WebResource file, byte[] content) {
-            Debug.WriteLine("Begin uploading file: " + file.GetFilename());
+        private void Upload(WebResource resource, byte[] content) {
+            try {
+                Trace.TraceInformation("Uploading file: " + resource.GetFilename());
 
-            file.Status = FileStatusTypes.Uploading;
-            DataProvider.Save(file);
+                resource.Status = FileStatusTypes.Uploading;
+                DataProvider.Save(resource);
 
-            StorageContainer.Upload(file.GetFilename(), content);
+                StorageContainer.Upload(resource.GetFilename(), content);
 
-            file.Status = FileStatusTypes.Ready;
-            DataProvider.Save(file);
+                resource.Status = FileStatusTypes.Uploaded;
+                DataProvider.Save(resource);
 
-            Debug.WriteLine("Finish uploading file: " + file.GetFilename());
+                Trace.TraceInformation("Finished uploading file: " + resource.GetFilename());
+            }
+            catch (Exception ex) {
+                Trace.TraceError("Failed uploading file: " + resource + "." + Environment.NewLine + ex);
+
+                resource.Status = FileStatusTypes.DownloadFailed;
+                resource.StatusText = ex.ToString();
+
+                DataProvider.Save(resource);
+            }
+            finally {
+                File.Delete(GetLocalStoragePath(resource));
+            }
+        }
+
+        private string GetLocalStoragePath(WebResource resource) {
+            return GetLocalStorageRoot() + resource.GetFilename();
         }
 
         public string CurrentUrl { get; set; }
+
+        public IsDataProvider DataProvider { get; set; }
+
+        public IsStorageContainer StorageContainer { get; set; }
         
+        public bool DownloadFiles { get; set; }
+
         private WebParser Parser { get; set; }
     }
 }

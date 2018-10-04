@@ -5,7 +5,7 @@ using System.Threading;
 using Starship.Core.Extensions;
 
 namespace Starship.Web.Services {
-    public abstract class HttpClientService : WebAutomationService {
+    public abstract class HttpClientService {
 
         protected HttpClientService(HttpClientHandler handler = null) {
             Client = handler == null ? new HttpClient() : new HttpClient(handler);
@@ -16,7 +16,7 @@ namespace Starship.Web.Services {
         private void Throttle() {
             if(LastRequest != null && !LastRequest.HasElapsed(RequestDelay, true)) {
                 var sleepTime = RequestDelay - (DateTime.UtcNow - LastRequest.Value);
-                Debug.WriteLine("Throttle: " + sleepTime.TotalSeconds + " seconds.");
+                Trace.TraceInformation("Throttle: " + sleepTime.TotalSeconds + " seconds.");
                 Thread.Sleep(sleepTime);
             }
             
@@ -25,16 +25,18 @@ namespace Starship.Web.Services {
 
         public HttpResponseMessage HttpHead(string url) {
             Throttle();
-            Debug.WriteLine(DateTime.UtcNow.ToShortTimeString() + " HttpHead: " + url);
+            Trace.TraceInformation(DateTime.UtcNow.ToShortTimeString() + " HttpHead: " + url);
             return Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, url)).Result;
         }
 
         public string HttpGet(string url) {
             Throttle();
-            Debug.WriteLine(DateTime.UtcNow.ToShortTimeString() + " HttpGet: " + url);
+            Trace.TraceInformation(DateTime.UtcNow.ToShortTimeString() + " HttpGet: " + url);
             return Client.GetStringAsync(url).Result;
         }
         
+        public TimeSpan RequestDelay = TimeSpan.FromSeconds(1);
+
         private DateTime? LastRequest { get; set; }
         
         private HttpClient Client { get; set; }

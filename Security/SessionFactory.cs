@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using Starship.Core.Security;
 
 namespace Starship.Web.Security {
-    public static class SessionFactory {
+    /*public static class SessionFactory {
 
         public static Session FromRequest(string sessionKey, HttpRequestMessage request) {
             var cookie = GetSessionCookie(sessionKey, request);
@@ -27,5 +27,5 @@ namespace Starship.Web.Security {
         private static CookieState GetSessionCookie(string sessionKey, HttpRequestMessage request) {
             return GetSessionCookie(sessionKey, request.Headers.GetCookies().SelectMany(each => each.Cookies).ToList());
         }
-    }
+    }*/
 }

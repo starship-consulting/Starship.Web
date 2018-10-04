@@ -12,6 +12,8 @@ namespace Starship.Web.Http {
 
         public byte[] Data { get; set; }
 
+        public string SourceUrl { get; set; }
+
         public string FileUrl { get; set; }
 
         public string Title { get; set; }

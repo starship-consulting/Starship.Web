@@ -1,14 +1,18 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading;
-using Starship.Azure.Interfaces;
-using Starship.Azure.Providers;
 
 namespace Starship.Web.Services {
-    public abstract class WebAutomationService {
+    public abstract class WebAutomationService : HttpClientService {
 
-        protected WebAutomationService() {
+        protected WebAutomationService(HttpClientHandler handler = null) : base(handler) {
             Cancel = new CancellationToken();
+        }
+
+        public void RunAsync() {
+            var thread = new Thread(Run);
+            thread.Start();
         }
         
         public void Run() {
@@ -20,13 +24,7 @@ namespace Starship.Web.Services {
         public abstract TimeSpan ProcessNext();
 
         public CancellationToken Cancel { get; set; }
-
-        public TimeSpan RequestDelay = TimeSpan.FromSeconds(1);
-
+        
         public Func<string> GetLocalStorageRoot = Path.GetTempPath;
-
-        public IsDataProvider DataProvider { get; set; }
-
-        public AzureBlobStorageContainer StorageContainer { get; set; }
     }
 }

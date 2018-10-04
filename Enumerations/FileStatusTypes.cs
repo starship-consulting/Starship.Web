@@ -7,7 +7,8 @@ namespace Starship.Web.Enumerations {
         Uploading = 2,
         Error = 3,
         Ignored = 4,
-        Ready = 5,
-        DownloadFailed = 6
+        Uploaded = 5,
+        DownloadFailed = 6,
+        UploadFailed = 7
     }
 }

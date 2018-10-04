@@ -2,7 +2,7 @@
 using System.Net.Http.Headers;
 
 namespace Starship.Web.Security {
-    public class SessionCookie : CookieHeaderValue {
+    /*public class SessionCookie : CookieHeaderValue {
 
         public SessionCookie() {
         }
@@ -22,5 +22,5 @@ namespace Starship.Web.Security {
         }
 
         public string Value { get; set; }
-    }
+    }*/ 
 }

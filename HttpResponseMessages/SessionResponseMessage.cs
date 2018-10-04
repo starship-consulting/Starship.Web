@@ -20,10 +20,10 @@ namespace Starship.Web.HttpResponseMessages {
                 Headers.Add("Access-Control-Allow-Headers", "Content-Type");
             }
 
-            Headers.AddCookies(new[] {
+            /*Headers.AddCookies(new[] {
                 new SessionCookie(sessionKey, request.RequestUri.Host.Replace("www", ""), serializedToken),
                 //new SessionCookie(TopiaSettings.DomainName, serializedToken)
-            });
+            });*/
 
             Content = new StringContent(serializedToken);
         }

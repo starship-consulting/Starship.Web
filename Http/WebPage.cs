@@ -1,4 +1,5 @@
 ﻿using System;
+using Starship.Web.Services;
 
 namespace Starship.Web.Http {
     public abstract class WebPage {
@@ -9,6 +10,10 @@ namespace Starship.Web.Http {
             }
 
             Url = url;
+        }
+
+        public virtual bool ShouldNavigateTo(ParsingService service) {
+            return true;
         }
 
         public abstract void Parse(ParsedDocument document);

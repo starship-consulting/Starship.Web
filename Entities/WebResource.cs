@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Starship.Core.Extensions;
 using Starship.Web.Enumerations;
 using Starship.Web.Http;
 
@@ -49,13 +50,17 @@ namespace Starship.Web.Entities {
         }
 
         public bool IsDownloadable() {
+            if(DateAdded.HasValue && DateAdded.HasElapsed(TimeSpan.FromDays(3))) {
+                return false;
+            }
+
             return ContentType == FileContentTypes.Video || ContentType == FileContentTypes.Image || ContentType == FileContentTypes.Html;
         }
 
         public string PartitionKey { get; set; }
 
         public string RowKey { get; set; }
-
+        
         public string Extension { get; set; }
 
         public string Url { get; set; }
