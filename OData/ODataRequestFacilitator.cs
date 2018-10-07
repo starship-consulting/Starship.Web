@@ -6,19 +6,23 @@ using System.Web.Http.OData;
 using System.Web.Http.OData.Builder;
 using System.Web.Http.OData.Query;
 using Microsoft.Data.Edm;
+using Starship.Core.Data;
 using Starship.Core.Extensions;
 using Starship.Core.Interfaces;
+using Starship.Core.Reflection;
+using Starship.Core.Security;
 using Starship.Core.Time;
 using Starship.Core.Utility;
 using Starship.Data;
+using Starship.Data.Interfaces;
 
 namespace Starship.Web.OData {
-    /*public static class ODataRequestFacilitator {
+    public static class ODataRequestFacilitator {
         
         public static void Initialize(params Type[] entityTypes) {
             var builder = new ODataConventionModelBuilder();
 
-            foreach (var type in entityTypes) { // DbContext.GetTypes()
+            foreach (var type in entityTypes) {
                 try {
                     builder.AddEntity(type);
                 }
@@ -99,7 +103,7 @@ namespace Starship.Web.OData {
         public static IQueryable Query(HttpRequestMessage request, ODataQuerySettings settings, Type type, IQueryable source = null) {
             if (type.IsInterface && typeof(HasIdentity).IsAssignableFrom(type)) {
                 var types = ReflectionCache.GetTypesOf(type, false)
-                    .Where(each => typeof(IDataModel).IsAssignableFrom(each))
+                    .Where(each => typeof(IsDataModel).IsAssignableFrom(each))
                     .ToList();
 
                 IQueryable data = null;
@@ -117,7 +121,7 @@ namespace Starship.Web.OData {
                 source = GetDataSource(type);
             }
 
-            if (typeof(IDataModel).IsAssignableFrom(type)) {
+            if (typeof(IsDataModel).IsAssignableFrom(type)) {
                 //var results = typeof(Enumerable).InvokeExtensionMethod("ToList", source.GetGenericType(), source) as IEnumerable;
                 return source;
             }
@@ -148,13 +152,13 @@ namespace Starship.Web.OData {
         }
 
         public static IQueryable ApplySecurityPolicy(Type type, IQueryable source) {
-            if (UserContext.Current.Role == RoleTypes.SiteAdmin) {
+
+            // Todo:  Access security interception
+            /*if (UserContext.Current.Role == RoleTypes.SiteAdmin) {
                 return source;
-            }
+            }*/
 
-            var instance = Activator.CreateInstance(type) as IBaseSecurityPolicy;
-
-            if (instance != null) {
+            if (Activator.CreateInstance(type) is HasSecurityPolicy instance) {
                 return instance.ApplySecurity(source, AccessTypes.Read);
             }
 
@@ -175,7 +179,7 @@ namespace Starship.Web.OData {
 
         private static IEdmModel GetEdmModel() {
             if (EdmModel == null) {
-                throw new Exception("ODataRequestProvider must be initialized prior to calling GetEdmModel().");
+                throw new Exception("ODataRequestFacilitator must be initialized prior to calling GetEdmModel().");
             }
 
             return EdmModel;
@@ -183,5 +187,5 @@ namespace Starship.Web.OData {
 
         // Use GetEdmModel() to access
         private static IEdmModel EdmModel { get; set; }
-    }*/
+    }
 }

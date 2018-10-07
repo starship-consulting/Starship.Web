@@ -47,7 +47,12 @@ namespace Starship.Web.OData {
             var formatter = negotiator.Negotiate(data.GetType(), actionExecutedContext.Request, configuration.Formatters).Formatter;
 
             if (formatter is JsonMediaTypeFormatter) {
-                var binder = new TypeNameSerializationBinder("{0}");
+
+                formatter = new JsonMediaTypeFormatter {
+                    SerializerSettings = JsonSerializerSettingPresets.Minimal
+                };
+
+                /*var binder = new TypeNameSerializationBinder("{0}");
                 binder.Assemblies.AddRange(TypeSources.Select(each => each.Assembly));
 
                 formatter = new JsonMediaTypeFormatter {
@@ -57,9 +62,9 @@ namespace Starship.Web.OData {
                         Formatting = Formatting.Indented,
                         ContractResolver = new AlphabeticalContractResolver(),
                         ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                        Binder = binder
+                        SerializationBinder = binder
                     }
-                };
+                };*/
             }
 
             var properties = actionExecutedContext.Request.ODataProperties();

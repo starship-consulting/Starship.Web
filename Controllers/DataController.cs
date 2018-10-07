@@ -13,52 +13,50 @@ using Starship.Core.Data;
 using Starship.Core.Extensions;
 using Starship.Core.Reflection;
 using Starship.Core.Utility;
+using Starship.Data;
 using Starship.Web.OData;
 
-namespace Starship.Web.Controllers
-{
-    /*public class DataController : ApiController
-    {
+namespace Starship.Web.Controllers {
+
+    public abstract class DataController : ApiController {
+
         [HttpGet, Route("data")]
-        public List<string> DataTypes()
-        {
+        public virtual List<string> DataTypes() {
             return GetDataTypes()
-                .Where(each => !each.Name.Contains("'"))
                 .Select(each => each.Name)
                 .Distinct()
+                .OrderBy(each => each)
                 .ToList();
         }
 
-        [HttpGet, Route("data/{typeName}"), ODataFormat]
-        public object Query([FromUri] string typeName)
-        {
-            var type = TryGetType(typeName);
-            return ODataRequestProvider.Query(Request, new ODataQuerySettings(), type);
-        }
+        private IEnumerable<Type> GetDataTypes() {
+            return DataStore.GetTypes();
 
-        private List<Type> GetDataTypes()
-        {
-            var entityTypes = Context.GetTypes();
+            /*var entityTypes = DataStore.GetTypes();
             var dataModelTypes = ReflectionCache.GetTypesOf<IsDataModel>();
 
-            return entityTypes.Concat(dataModelTypes).ToList();
+            return entityTypes.Concat(dataModelTypes).ToList();*/
         }
 
-        private Type TryGetType(string typeName)
-        {
+        [HttpGet, Route("data/{typeName}"), ODataFormat]
+        public virtual object Query([FromUri] string typeName) {
+            var type = TryGetType(typeName);
+            return ODataRequestFacilitator.Query(Request, new ODataQuerySettings(), type);
+        }
+
+        private Type TryGetType(string typeName) {
             typeName = typeName.ToLower();
 
             var type = GetDataTypes().FirstOrDefault(each => each.Name.ToLower() == typeName || each.Name.ToLower() == typeName.Substring(0, typeName.Length - 1));
 
-            if (type == null)
-            {
+            if (type == null) {
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             }
 
             return type;
         }
 
-        [HttpDelete, Route("data/{typeName}/{entityId}")]
+        /*[HttpDelete, Route("data/{typeName}/{entityId}")]
         public object Delete([FromUri] string typeName, [FromUri] string entityId)
         {
             var type = TryGetType(typeName);
@@ -230,6 +228,6 @@ namespace Starship.Web.Controllers
             }
 
             return null;
-        }
-    }*/
+        }*/
+    }
 }
