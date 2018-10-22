@@ -2,22 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Reflection;
-using System.Runtime.Remoting.Contexts;
+using System.Net.Http.Formatting;
+using System.Net.Http.Headers;
 using System.Web.Http;
 using System.Web.Http.OData.Query;
-using CsQuery.ExtensionMethods;
-using Newtonsoft.Json.Linq;
-using Starship.Core.Data;
 using Starship.Core.Extensions;
+using Starship.Core.Json;
 using Starship.Core.Reflection;
-using Starship.Core.Utility;
 using Starship.Data;
+using Starship.Data.Attributes;
+using Starship.Web.Extensions;
 using Starship.Web.OData;
 
 namespace Starship.Web.Controllers {
-
     public abstract class DataController : ApiController {
 
         [HttpGet, Route("data")]
@@ -56,6 +53,80 @@ namespace Starship.Web.Controllers {
             return type;
         }
 
+        [HttpGet, Route("data/{typeName}/{idOrMethod}")]
+        public virtual object Query([FromUri] string typeName, [FromUri] string idOrMethod) {
+
+            var type = TryGetType(typeName);
+            var entity = ODataRequestFacilitator.QueryEntityById(Request, type, idOrMethod).FirstOrDefault();
+
+            if (entity != null) {
+                return Json(entity);
+            }
+
+            // Query by method
+            var method = type.GetMethods().FirstOrDefault(each => each.Name.ToLower() == idOrMethod.ToLower());
+
+            if (!method.IsStatic) {
+                throw new Exception("Only static methods can be invoked without an entity id.");
+            }
+
+            /*var access = method.GetCustomAttribute<AccessAttribute>();
+
+            if (!CurrentUser.IsAuthenticated || CurrentUser.Role != RoleTypes.SiteAdmin) {
+                if (access == null) {
+                    return this.Error("Only administrators can access this resource.");
+                }
+            }*/
+
+            var invoker = MethodInvoker.GetDefault(method);
+            var results = invoker.Invoke(null, Request.ToDictionary());
+            
+            return Json(results);
+        }
+
+        [HttpGet, Route("data/{typeName}/{id}/{methodName}")]
+        public virtual object Query([FromUri] string typeName, [FromUri] string id, [FromUri] string methodName) {
+
+            var type = TryGetType(typeName);
+            var method = type.GetMethods().FirstOrDefault(each => each.Name.ToLower() == methodName.ToLower());
+
+            if (method.IsStatic) {
+                throw new Exception("Only non-static methods can be invoked with an entity id.");
+            }
+
+            var includes = method.GetAttributes<IncludeAttribute>().Select(each => each.PropertyName).ToArray();
+            var entity = ODataRequestFacilitator.QueryEntityById(Request, type, id, includes).FirstOrDefault();
+
+            if(entity == null) {
+                throw new Exception("Invalid entity.");
+            }
+
+            /*if (entity == null) {
+                throw new Exception("Invalid entity id.");
+            }*/
+
+            /*var access = method.GetCustomAttribute<AccessAttribute>();
+
+            if (!CurrentUser.IsAuthenticated || CurrentUser.Role != RoleTypes.SiteAdmin) {
+                if (access == null) {
+                    return this.Error("Only administrators can access this resource.");
+                }
+            }*/
+
+            var invoker = MethodInvoker.GetDefault(method);
+            var results = invoker.Invoke(entity, Request.ToDictionary());
+            
+            return Json(results);
+        }
+
+        private object Json(object data) {
+            return Content(HttpStatusCode.OK, data, Formatter, new MediaTypeHeaderValue("application/json"));
+        }
+
+        private static readonly JsonMediaTypeFormatter Formatter = new JsonMediaTypeFormatter {
+            SerializerSettings = JsonSerializerSettingPresets.Minimal
+        };
+
         /*[HttpDelete, Route("data/{typeName}/{entityId}")]
         public object Delete([FromUri] string typeName, [FromUri] string entityId)
         {
@@ -75,41 +146,6 @@ namespace Starship.Web.Controllers {
             }
 
             return new HttpResponseMessage();
-        }
-
-        [HttpGet, Route("data/{typeName}/{idOrMethod}")]
-        public object Query([FromUri] string typeName, [FromUri] string idOrMethod)
-        {
-            var type = TryGetType(typeName);
-
-            var entity = GetEntityById(type, idOrMethod);
-
-            if (entity != null)
-            {
-                return entity;
-            }
-
-            // Query by method
-            var method = type.GetMethods().FirstOrDefault(each => each.Name.ToLower() == idOrMethod.ToLower());
-
-            if (!method.IsStatic)
-            {
-                return this.Error("Only static methods can be invoked without an aggregate id.");
-            }
-
-            var access = method.GetCustomAttribute<AccessAttribute>();
-
-            if (!CurrentUser.IsAuthenticated || CurrentUser.Role != RoleTypes.SiteAdmin)
-            {
-                if (access == null)
-                {
-                    return this.Error("Only administrators can access this resource.");
-                }
-            }
-
-            var invoker = MethodInvoker.GetDefault(method);
-
-            return invoker.Invoke(null, Request.ToDictionary());
         }
 
         [HttpPost, Route("data/{typeName}")]
@@ -213,21 +249,6 @@ namespace Starship.Web.Controllers {
 
             return null;
         }
-
-        private object GetEntityById(Type type, string entityId)
-        {
-            int id = 0;
-
-            if (int.TryParse(entityId, out id))
-            {
-                var pkName = Context.GetPrimaryKeyName(ODataRequestProvider.GetUnderlyingDataType(type));
-                var filter = ODataRequestProvider.GetUnderlyingDataSource(type).Where(pkName, id);
-                var source = ODataRequestProvider.GetDataSource(type, filter);
-
-                return ODataRequestProvider.Query(Request, new ODataQuerySettings(), type, source).FirstOrDefault();
-            }
-
-            return null;
-        }*/
+        */
     }
 }

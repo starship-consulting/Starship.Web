@@ -5,12 +5,10 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters;
 using System.Web.Http;
 using System.Web.Http.Filters;
 using System.Web.Http.OData;
 using System.Web.Http.OData.Extensions;
-using Newtonsoft.Json;
 using Starship.Core.Extensions;
 using Starship.Core.Json;
 
@@ -31,7 +29,7 @@ namespace Starship.Web.OData {
                 throw ex.InnerException;
             }
 
-            if (actionExecutedContext == null || actionExecutedContext.Response == null || !(actionExecutedContext.Response.Content is ObjectContent) || actionExecutedContext.Response.Content.As<ObjectContent>().Value == null) {
+            if (!(actionExecutedContext?.Response?.Content is ObjectContent) || actionExecutedContext.Response.Content.As<ObjectContent>().Value == null) {
                 actionExecutedContext.Response = new HttpResponseMessage(HttpStatusCode.NotFound);
                 return;
             }

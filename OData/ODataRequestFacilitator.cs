@@ -19,7 +19,7 @@ using Starship.Data.Interfaces;
 namespace Starship.Web.OData {
     public static class ODataRequestFacilitator {
         
-        public static void Initialize(params Type[] entityTypes) {
+        /*public static void Initialize(params Type[] entityTypes) {
             var builder = new ODataConventionModelBuilder();
 
             foreach (var type in entityTypes) {
@@ -32,7 +32,7 @@ namespace Starship.Web.OData {
             }
 
             EdmModel = builder.GetEdmModel();
-        }
+        }*/
 
         private static Type FindInterfaceInBaseTypes(Type source, Type interfaceType) {
             if ((interfaceType.Name == source.Name && source.GetGenericArguments().Length == interfaceType.GetGenericArguments().Length && source.GetGenericArguments().Length > 1) || interfaceType.IsAssignableFrom(source)) {
@@ -73,8 +73,8 @@ namespace Starship.Web.OData {
             return query;
         }
 
-        public static IQueryable GetUnderlyingDataSource(Type type) {
-            return GetDataStore(GetUnderlyingDataType(type));
+        public static IQueryable GetUnderlyingDataSource(Type type, params string[] includes) {
+            return GetDataStore(GetUnderlyingDataType(type), includes);
         }
 
         public static Type GetUnderlyingDataType(Type type) {
@@ -89,8 +89,8 @@ namespace Starship.Web.OData {
             return parameterType.ParameterType.GenericTypeArguments.First();
         }
 
-        private static IQueryable GetDataStore(Type type) {
-            var source = DataStore.Get(type);
+        private static IQueryable GetDataStore(Type type, params string[] includes) {
+            var source = DataStore.Get(type).Include(includes) as IQueryable;
 
             if (typeof(IsDeletable).IsAssignableFrom(type)) {
                 var time = TimeProvider.Now;
@@ -98,6 +98,18 @@ namespace Starship.Web.OData {
             }
 
             return source;
+        }
+
+        public static IQueryable QueryEntityById(HttpRequestMessage request, Type type, string entityId, params string[] includes) {
+
+            if (!int.TryParse(entityId, out var id)) {
+                return null;
+            }
+
+            var pkName = DataStore.GetPrimaryKeyName(GetUnderlyingDataType(type));
+            var source = GetUnderlyingDataSource(type, includes).Where(pkName, id);
+
+            return Query(request, new ODataQuerySettings(), type, source);
         }
 
         public static IQueryable Query(HttpRequestMessage request, ODataQuerySettings settings, Type type, IQueryable source = null) {
@@ -171,21 +183,22 @@ namespace Starship.Web.OData {
             //return request.ApplyODataFilter(settings, results, type);
         }
 
-        public static IQueryable ApplyODataFilter(this HttpRequestMessage request, ODataQuerySettings settings, IQueryable query, Type type) {
-            var context = new ODataQueryContext(GetEdmModel(), type);
+        /*public static IQueryable ApplyODataFilter(this HttpRequestMessage request, ODataQuerySettings settings, IQueryable query, Type type) {
+            var context = new ODataQueryContext(EdmModel, type);
             var options = new ODataQueryOptions(context, request);
             return options.ApplyTo(query, settings);
-        }
+        }*/
+        
+        /*private static IEdmModel _edmModel;
+        private static IEdmModel EdmModel {
+            get {
+                if(_edmModel == null) {
+                    throw new Exception("ODataRequestFacilitator must be initialized prior to calling GetEdmModel().");
+                }
 
-        private static IEdmModel GetEdmModel() {
-            if (EdmModel == null) {
-                throw new Exception("ODataRequestFacilitator must be initialized prior to calling GetEdmModel().");
+                return _edmModel;
             }
-
-            return EdmModel;
-        }
-
-        // Use GetEdmModel() to access
-        private static IEdmModel EdmModel { get; set; }
+            set => _edmModel = value;
+        }*/
     }
 }
