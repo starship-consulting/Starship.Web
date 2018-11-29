@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Starship.Core.Data;
+using Starship.Core.Storage;
 using Starship.Web.Http;
 using Starship.Web.Entities;
 using Starship.Web.Enumerations;
@@ -144,7 +145,8 @@ namespace Starship.Web.Services {
                 resource.Status = FileStatusTypes.Uploading;
                 DataProvider.Save(resource);
 
-                StorageContainer.Upload(resource.GetFilename(), content);
+                throw new Exception("No storage provider set");
+                //Storage.UploadAsync(resource.GetFilename(), content).Wait();
 
                 resource.Status = FileStatusTypes.Uploaded;
                 DataProvider.Save(resource);
@@ -172,7 +174,7 @@ namespace Starship.Web.Services {
 
         public IsDataProvider DataProvider { get; set; }
 
-        public IsStorageContainer StorageContainer { get; set; }
+        public IsFileStorageProvider Storage { get; set; }
         
         public bool DownloadFiles { get; set; }
 

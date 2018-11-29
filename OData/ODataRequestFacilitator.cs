@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
-using System.Web.Http.OData;
-using System.Web.Http.OData.Builder;
 using System.Web.Http.OData.Query;
-using Microsoft.Data.Edm;
 using Starship.Core.Data;
 using Starship.Core.Extensions;
 using Starship.Core.Interfaces;
@@ -100,7 +96,7 @@ namespace Starship.Web.OData {
             return source;
         }
 
-        public static IQueryable QueryEntityById(HttpRequestMessage request, Type type, string entityId, params string[] includes) {
+        public static IQueryable QueryEntityById(Type type, string entityId, params string[] includes) {
 
             if (!int.TryParse(entityId, out var id)) {
                 return null;
@@ -109,10 +105,10 @@ namespace Starship.Web.OData {
             var pkName = DataStore.GetPrimaryKeyName(GetUnderlyingDataType(type));
             var source = GetUnderlyingDataSource(type, includes).Where(pkName, id);
 
-            return Query(request, new ODataQuerySettings(), type, source);
+            return Query(new ODataQuerySettings(), type, source);
         }
 
-        public static IQueryable Query(HttpRequestMessage request, ODataQuerySettings settings, Type type, IQueryable source = null) {
+        public static IQueryable Query(ODataQuerySettings settings, Type type, IQueryable source = null) {
             if (type.IsInterface && typeof(HasIdentity).IsAssignableFrom(type)) {
                 var types = ReflectionCache.GetTypesOf(type, false)
                     .Where(each => typeof(IsDataModel).IsAssignableFrom(each))
@@ -122,7 +118,7 @@ namespace Starship.Web.OData {
                 Type sourceType = null;
 
                 foreach (var eachType in types) {
-                    var query = Query(request, new ODataQuerySettings(), eachType, DataStore.Get(eachType));
+                    var query = Query(new ODataQuerySettings(), eachType, DataStore.Get(eachType));
                     data = Invoke<IQueryable>("BuildInterfaceQuery", eachType, type, query, data);
                 }
 
@@ -138,7 +134,8 @@ namespace Starship.Web.OData {
                 return source;
             }
 
-            return request.ApplySecurityPolicy(settings, type, source);
+            return ApplySecurityPolicy(settings, type, source);;
+            //return request.ApplySecurityPolicy(settings, type, source);
         }
 
         private static T Invoke<T>(string name, Type genericParameter1, params object[] parameters) {
@@ -177,7 +174,7 @@ namespace Starship.Web.OData {
             return source;
         }
 
-        public static IQueryable ApplySecurityPolicy(this HttpRequestMessage request, ODataQuerySettings settings, Type type, IQueryable source) {
+        public static IQueryable ApplySecurityPolicy(ODataQuerySettings settings, Type type, IQueryable source) {
             return ApplySecurityPolicy(type, source);
             //var results = ApplySecurityPolicy(type, source);
             //return request.ApplyODataFilter(settings, results, type);

@@ -15,7 +15,7 @@ using Starship.Web.Extensions;
 using Starship.Web.OData;
 
 namespace Starship.Web.Controllers {
-    public abstract class DataController : ApiController {
+    public class DataController : ApiController {
 
         [HttpGet, Route("data")]
         public virtual List<string> DataTypes() {
@@ -38,7 +38,7 @@ namespace Starship.Web.Controllers {
         [HttpGet, Route("data/{typeName}"), ODataFormat]
         public virtual object Query([FromUri] string typeName) {
             var type = TryGetType(typeName);
-            return ODataRequestFacilitator.Query(Request, new ODataQuerySettings(), type);
+            return ODataRequestFacilitator.Query(new ODataQuerySettings(), type);
         }
 
         private Type TryGetType(string typeName) {
@@ -57,7 +57,7 @@ namespace Starship.Web.Controllers {
         public virtual object Query([FromUri] string typeName, [FromUri] string idOrMethod) {
 
             var type = TryGetType(typeName);
-            var entity = ODataRequestFacilitator.QueryEntityById(Request, type, idOrMethod).FirstOrDefault();
+            var entity = ODataRequestFacilitator.QueryEntityById(type, idOrMethod).FirstOrDefault();
 
             if (entity != null) {
                 return Json(entity);
@@ -95,7 +95,7 @@ namespace Starship.Web.Controllers {
             }
 
             var includes = method.GetAttributes<IncludeAttribute>().Select(each => each.PropertyName).ToArray();
-            var entity = ODataRequestFacilitator.QueryEntityById(Request, type, id, includes).FirstOrDefault();
+            var entity = ODataRequestFacilitator.QueryEntityById(type, id, includes).FirstOrDefault();
 
             if(entity == null) {
                 throw new Exception("Invalid entity.");
