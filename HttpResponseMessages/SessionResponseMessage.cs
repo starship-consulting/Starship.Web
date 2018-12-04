@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json;
 using Starship.Core.Security;
-using Starship.Web.Security;
 
 namespace Starship.Web.HttpResponseMessages {
     public class SessionResponseMessage : HttpResponseMessage {

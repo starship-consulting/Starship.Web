@@ -1,5 +1,4 @@
 ﻿using System.Net.Http;
-using Starship.Web.Security;
 
 namespace Starship.Web.HttpResponseMessages {
     public class LogoutResponseMessage : HttpResponseMessage {
