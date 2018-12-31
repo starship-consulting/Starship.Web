@@ -9,10 +9,20 @@ namespace Starship.Web.Security {
         }
 
         public UserProfile(ClaimsPrincipal user) {
+            Id = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             Name = user.Identity.Name;
             Email = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
             Photo = user.Claims.FirstOrDefault(c => c.Type == "picture")?.Value;
         }
+
+        public static UserProfile Guest() {
+            return new UserProfile {
+                Id = "guest",
+                Name = "Guest"
+            };
+        }
+
+        public string Id { get; set; }
 
         public string Name { get; set; }
 
