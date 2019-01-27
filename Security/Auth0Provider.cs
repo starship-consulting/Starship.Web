@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -9,7 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace Starship.Web.Security {
     public static class Auth0Provider {
 
-        public static void AddAuth0Authentication(this IServiceCollection services, string domain, string clientId, string clientSecret) {
+        public static void AddAuth0Authentication(this IServiceCollection services, string domain, string clientId, string clientSecret, Action<ClaimsPrincipal> onAuthenticated) {
 
             services.AddAuthentication(options => {
                 options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -41,12 +42,12 @@ namespace Starship.Web.Security {
                 };
 
                 options.Events = new OpenIdConnectEvents {
-
-                    /*OnRedirectToIdentityProvider = context => {
-                        context.ProtocolMessage.SetParameter("audience", "YOUR_API_IDENTIFIER");
-                        return Task.FromResult(0);
-                    },*/
-
+                    
+                    OnTokenValidated = (context) => {
+                        onAuthenticated?.Invoke(context.Principal);
+                        return Task.CompletedTask;
+                    },
+                    
                     OnRedirectToIdentityProviderForSignOut = (context) => {
 
                         var logoutUri = $"https://{domain}/v2/logout?client_id={clientId}";
