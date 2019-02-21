@@ -5,6 +5,8 @@ namespace Starship.Web.QueryModels {
 
         public DateTime? IncludeInvalidated { get; set; }
 
+        public string Filter { get; set; }
+
         public int Top { get; set; }
     }
 }

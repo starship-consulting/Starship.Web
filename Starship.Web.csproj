@@ -46,6 +46,9 @@
     <Reference Include="Microsoft.AspNetCore.Authentication.Core, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNetCore.Authentication.Core.2.1.1\lib\netstandard2.0\Microsoft.AspNetCore.Authentication.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.AspNetCore.Authentication.JwtBearer, Version=2.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\DontBeFishy\packages\Microsoft.AspNetCore.Authentication.JwtBearer.2.1.2\lib\netstandard2.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNetCore.Authentication.OAuth, Version=2.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNetCore.Authentication.OAuth.2.1.2\lib\netstandard2.0\Microsoft.AspNetCore.Authentication.OAuth.dll</HintPath>
     </Reference>
@@ -268,6 +271,7 @@
     <Compile Include="Schema\WebSchemaProvider.cs" />
     <Compile Include="Security\Auth0Provider.cs" />
     <Compile Include="Security\UserProfile.cs" />
+    <Compile Include="Services\Auth0Settings.cs" />
     <Compile Include="Services\WebAutomationService.cs" />
     <Compile Include="Services\HttpClientService.cs" />
     <Compile Include="Services\ParsingService.cs" />
@@ -286,8 +290,6 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
