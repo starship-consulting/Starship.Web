@@ -7,6 +7,8 @@ namespace Starship.Web.QueryModels {
 
         public string Filter { get; set; }
 
+        public string Partition { get; set; }
+
         public int Top { get; set; }
     }
 }

@@ -9,6 +9,10 @@ namespace Starship.Web.Security {
         public UserProfile() {
         }
 
+        public UserProfile(string email) {
+            Email = email;
+        }
+
         public UserProfile(ClaimsPrincipal user) {
             Id = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             Name = user.Identity.Name;
