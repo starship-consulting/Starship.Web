@@ -267,6 +267,7 @@
     <Compile Include="OData\ODataFormatAttribute.cs" />
     <Compile Include="OData\ODataRequestFacilitator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryModels\EventQueryParameters.cs" />
     <Compile Include="QueryModels\DataQueryParameters.cs" />
     <Compile Include="Schema\WebSchemaProvider.cs" />
     <Compile Include="Security\Auth0Provider.cs" />
