@@ -11,6 +11,7 @@ namespace Starship.Web.Security {
 
         public UserProfile(string email) {
             Email = email;
+            IsImpersonating = true;
         }
 
         public UserProfile(ClaimsPrincipal user) {
@@ -23,7 +24,8 @@ namespace Starship.Web.Security {
         public static UserProfile Guest() {
             return new UserProfile {
                 Id = "guest",
-                Name = "Guest"
+                Name = "Guest",
+                Email = "guest"
             };
         }
 
@@ -34,5 +36,7 @@ namespace Starship.Web.Security {
         public string Email { get; set; }
 
         public string Photo { get; set; }
+
+        public bool IsImpersonating { get; set; }
     }
 }

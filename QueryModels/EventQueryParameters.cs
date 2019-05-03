@@ -12,5 +12,11 @@ namespace Starship.Web.QueryModels {
         public string Filter { get; set; }
 
         public int Top { get; set; }
+
+        public string Partition { get; set; }
+
+        public string StartDate { get; set; }
+
+        public string EndDate { get; set; }
     }
 }
