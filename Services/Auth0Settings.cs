@@ -1,4 +1,6 @@
-﻿namespace Starship.Web.Services {
+﻿using System;
+
+namespace Starship.Web.Services {
 
     public class Auth0Settings {
 
@@ -11,5 +13,9 @@
         public string ClientSecret { get; set; }
 
         public string AccessToken { get; set; }
+
+        public bool UseCookies { get; set; }
+
+        public bool UseJwtBearer { get; set; }
     }
 }
