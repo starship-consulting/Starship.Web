@@ -71,10 +71,22 @@ namespace Starship.Web.Services {
 
             var partition = Parser.GetPartition();
 
-            var resource = DataProvider.Get<WebResource>().ByRemoteIdentifier(partition, item.Id).FirstOrDefault();
+            var resource = DataProvider.Get<WebResource>().ByRemoteIdentifier(partition, item.Id).Take(1).ToList().FirstOrDefault();
+
+            if(resource != null) {
+                if(resource.Score != resource.GetScore()) {
+                    resource.Score = resource.GetScore();
+                    DataProvider.Save(resource);
+                }
+            }
 
             if (resource == null) {
-                resource = DataProvider.Save(new WebResource(partition, pageUrl, item));
+                resource = new WebResource(partition, pageUrl, item);
+                resource.Score = resource.GetScore();
+
+                if(ShouldSave == null || ShouldSave(resource)) {
+                    resource = DataProvider.Save(resource);
+                }
             }
             else if (resource.Status != FileStatusTypes.DownloadFailed) {
                 return;
@@ -171,12 +183,14 @@ namespace Starship.Web.Services {
         }
 
         public string CurrentUrl { get; set; }
-
+        
         public IsDataProvider DataProvider { get; set; }
 
         public IsFileStorageProvider Storage { get; set; }
         
         public bool DownloadFiles { get; set; }
+
+        public Func<WebResource, bool> ShouldSave;
 
         private WebParser Parser { get; set; }
     }

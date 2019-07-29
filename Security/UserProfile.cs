@@ -12,6 +12,7 @@ namespace Starship.Web.Security {
         public UserProfile(string email) {
             Email = email;
             IsImpersonating = true;
+            IsAuthenticated = true;
         }
 
         public UserProfile(ClaimsPrincipal user) {
@@ -36,6 +37,8 @@ namespace Starship.Web.Security {
 
             Email = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
             Photo = user.Claims.FirstOrDefault(c => c.Type == "picture")?.Value;
+
+            IsAuthenticated = true;
         }
 
         public static UserProfile Guest() {
@@ -53,6 +56,8 @@ namespace Starship.Web.Security {
         public string Email { get; set; }
 
         public string Photo { get; set; }
+
+        public bool IsAuthenticated { get; set; }
 
         public bool IsImpersonating { get; set; }
     }
