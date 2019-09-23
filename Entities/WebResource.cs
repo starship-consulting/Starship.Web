@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Starship.Core.Data;
 using Starship.Core.Extensions;
+using Starship.Data.Entities;
 using Starship.Web.Enumerations;
 using Starship.Web.Http;
 
 namespace Starship.Web.Entities {
-    public class WebResource : CosmosResource {
+    public class WebResource : DocumentEntity {
 
         public WebResource() {
         }

@@ -28,8 +28,9 @@ namespace Starship.Web.Services {
                 Trace.TraceError(exception.ToString());
                 //DataProvider.Save(new LogMessage(Parser.GetPartition(), CurrentUrl, exception));
 
-                if (Debugger.IsAttached) {
-                    throw;
+                if (Debugger.IsAttached)
+                {
+                    //throw;
                 }
             }
 

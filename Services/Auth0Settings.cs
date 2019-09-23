@@ -8,8 +8,6 @@ namespace Starship.Web.Services {
 
         public string Identifier { get; set; }
 
-        public string Audience { get; set; }
-
         public string ClientId { get; set; }
 
         public string ClientSecret { get; set; }
@@ -19,5 +17,9 @@ namespace Starship.Web.Services {
         public bool UseCookies { get; set; }
 
         public bool UseJwtBearer { get; set; }
+
+        public string TokenUrl => $"https://{Identifier}.auth0.com/oauth/token";
+
+        public string Audience => $"https://{Identifier}.auth0.com/api/v2/";
     }
 }
